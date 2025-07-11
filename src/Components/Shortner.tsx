@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { generateUniqueString, isValidURL } from '../Utils'
 import { Database, useCustomToast } from '../Library';
+import Spinner from './Spinner';
 
 const Shortner = () => {
 
@@ -16,7 +17,8 @@ const Shortner = () => {
     }
 
 
-    const onSubmit = async () => {
+    const onSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
         if (isValidURL(originalUrl)) {
             setIsSubmit(true);
             const convertedUrl: string = await generateUniqueString();
@@ -57,18 +59,19 @@ const Shortner = () => {
         if (isConvertedUrl !== "") {
             Database.getUrl(isConvertedUrl).then((data) => {
                 if (data.docs.length > 0) {
-                    const result = data.docs[0].data()
-                    const newTab = window.open(`https://${result.original_url}`, "_blank");
-                    if (!newTab || newTab.closed || typeof newTab.closed === "undefined") {
-                        console.error("Popup blocked! Allow pop-ups in browser settings.");
-                        showError("Popup blocked! Please allow pop-ups in browser settings.");
-                        setTimeout(() => {
-                            window.location.href = "/";
-                        }, 2000);
-                    } else {
-                        // Redirect current tab only if new tab opens successfully
-                        window.location.href = "/";
-                    }
+                    const result = data.docs[0].data();
+                    window.location.href = `https://${result.original_url}`;
+                    // const newTab = window.open(`https://${result.original_url}`, "_blank");
+                    // if (!newTab || newTab.closed || typeof newTab.closed === "undefined") {
+                    //     console.error("Popup blocked! Allow pop-ups in browser settings.");
+                    //     showError("Popup blocked! Please allow pop-ups in browser settings.");
+                    //     setTimeout(() => {
+                    //         window.location.href = "/";
+                    //     }, 2000);
+                    // } else {
+                    //     // Redirect current tab only if new tab opens successfully
+                    //     window.location.href = "/";
+                    // }
                 }
                 else {
                     console.error("No matching data found");
@@ -89,7 +92,7 @@ const Shortner = () => {
     return (
         <>
             {isConvertedUrl !== "" ? <>
-                <h1 className='text-5xl font-semibold'>Redirecting...</h1>
+                <h1 className='text-5xl font-semibold'><Spinner /></h1>
             </> :
                 <form className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
                     <h1 className='font-bold text-center mb-4 text-2xl px-16'>Free URL Shortener</h1>
@@ -104,6 +107,11 @@ const Shortner = () => {
                                 name="original_url"
                                 placeholder="Enter link here"
                                 onChange={handleOnChange}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                    }
+                                }}
                                 value={originalUrl}
                                 className="px-3 py-2 flex-1 block w-full rounded-r-md border border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                         </div>
